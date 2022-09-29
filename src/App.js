@@ -1,14 +1,14 @@
 import logo from './logo.svg';
 import './App.css';
 import PlayButton from './PlayButton';
+import DragDrop from './DragDrop';
 import React from 'react';
 
 class App extends React.Component{
   constructor(props) {
     super(props);
     this.state = {
-      song: process.env.PUBLIC_URL + 'At_Dooms_Gate.mp3',
-      //song: process.env.PUBLIC_URL + 'PRESSURE.wav',
+      file: null,
       playing: false,
       audioContext: null,
       audioElement: null
@@ -28,20 +28,32 @@ class App extends React.Component{
   playButtonHandler(){
     // Check if context is in suspended state (autoplay policy)
     if (this.state.audioContext.state === 'suspended') {
-      this.audioContext.resume();
+      this.state.audioContext.resume();
     }
     this.setState({playing:!this.state.playing});
     !this.state.playing ? this.state.audioElement.play() : this.state.audioElement.pause();
   }
+
+  handleDragDrop(file){
+    this.setState({file: file});
+    const audioElement = document.querySelector('audio');
+    const sourceAux = URL.createObjectURL(file);
+    console.log(sourceAux);
+    audioElement.src = sourceAux;
+  };
   
   render() {
     return (
       <div>
         <h1>Clip Comparer</h1>
-        <audio src={this.state.song}></audio>
+        <DragDrop
+          handleDragDrop = {(file) => this.handleDragDrop(file)}
+          file = {this.state.file}
+        />
+        <audio></audio>
         <PlayButton 
           playButtonHandler = {() => this.playButtonHandler()}
-          playing={this.state.playing} 
+          playing = {this.state.playing} 
         />
       </div>
 
