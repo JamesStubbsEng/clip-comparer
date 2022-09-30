@@ -2,6 +2,7 @@ import logo from './logo.svg';
 import './App.css';
 import PlayButton from './PlayButton';
 import DragDrop from './DragDrop';
+import FrequencyGraph from './FrequencyGraph';
 import React from 'react';
 
 class App extends React.Component{
@@ -11,18 +12,25 @@ class App extends React.Component{
       file: null,
       playing: false,
       audioContext: null,
-      audioElement: null
+      audioElement: null,
+      analyser: null
     };
   }
 
   componentDidMount(){
-      const AudioContext = window.AudioContext ||      window.webkitAudioContext;
-      const audioContext = new AudioContext();
-      this.setState({audioContext: audioContext})
-      const audioElement = document.querySelector('audio');
-      this.setState({audioElement:audioElement})
-      const track = audioContext.createMediaElementSource(audioElement);
-      track.connect(audioContext.destination);
+    const AudioContext = window.AudioContext ||      window.webkitAudioContext;
+    const audioContext = new AudioContext();
+    this.setState({audioContext: audioContext})
+    const audioElement = document.querySelector('audio');
+    this.setState({audioElement:audioElement})
+    const track = audioContext.createMediaElementSource(audioElement);
+    track.connect(audioContext.destination);
+
+    //analyser
+    const analyser = audioContext.createAnalyser();
+    track.connect(analyser);
+    analyser.fftSize = 2048;
+    this.setState({analyser: analyser});
   }
 
   playButtonHandler(){
@@ -55,8 +63,10 @@ class App extends React.Component{
           playButtonHandler = {() => this.playButtonHandler()}
           playing = {this.state.playing} 
         />
-      </div>
-
+        <FrequencyGraph 
+        analyser = {this.state.analyser}
+        />
+      </div>        
     );
   }
 }
