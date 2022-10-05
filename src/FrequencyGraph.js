@@ -22,13 +22,21 @@ class FrequencyGraph extends React.Component{
     calculateX(i, length, context){
 
         // Center middle canvas x to ~2 kHz with log scale
-        // using forumula logOfX = a*log10(x + 1), 
-        // where a = 0.5 / (log10(x_2k + 1)),
-        // where x_2k = (2/(f_sample/2))*(x_max)
+        // using forumula logOfX = a*log10(x + 1)
         // where x = i_norm * (x_max - x_min)/(i_norm_max - i_norm_min)
 
-        const x = (i/length)*(100 - 1)/(1 - 0);
-        const logOfX = 0.5004 * Math.log10(x + 1);
+        // intermediate equations:
+        // a = 0.5 / (log10(x_2k + 1)),
+        // x_2k = (f/(f_sample/2))*(x_max - x_min)
+        // x_min = 0 and i_norm_min = 0, f = 2k
+        // x_max = 10^(1/a) - 1
+
+        // solve these 2 equations:
+        // 1) x_max = (10^(1/a) - 1)) 
+        // 2) x_max = ((f_sample/2)/f) * (10^(0.5/a) - 1)
+
+        const x = (i/length)*(99.5);
+        const logOfX = 0.499 * Math.log10(x + 1);
         return logOfX * context.canvas.width;
     }
 
