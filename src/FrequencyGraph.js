@@ -19,38 +19,59 @@ class FrequencyGraph extends React.Component{
         this.draw();
     }
 
+    calculateX(i, length, context){
+
+        // Center middle canvas x to ~2 kHz with log scale
+        // using forumula logOfX = a*log10(x + 1), 
+        // where a = 0.5 / (log10(x_2k + 1)),
+        // where x_2k = (2/(f_sample/2))*(x_max)
+        // where x = i_norm * (x_max - x_min)/(i_norm_max - i_norm_min)
+
+        const x = (i/length)*(100 - 1)/(1 - 0);
+        const logOfX = 0.5004 * Math.log10(x + 1);
+        return logOfX * context.canvas.width;
+    }
+
     draw(){
         const data = new Uint8Array(this.props.analyser.frequencyBinCount);
         this.props.analyser.getByteFrequencyData(data);
         const canvas = this.canvasRef.current;
 
-        if(canvas == null){
-            console.log("canvas is null");
+        if(canvas == null)
             return;
-        }
-            
+    
         const context = canvas.getContext('2d');
         const dataParm = [...data];      
         
         context.fillStyle = "#050c03";    
-        context.fillRect(0, 0, canvas.width, canvas.height)              
-        context.lineWidth = 2; 
-        context.strokeStyle = '#d5d4d5'; 
-        const space = context.canvas.width / dataParm.length;
+        context.fillRect(0, 0, canvas.width, canvas.height)      
+        
+        const canvasTopMargin = 20;
 
+        let region = new Path2D();
         dataParm.forEach((value, i) => {
-            context.beginPath();
-            context.moveTo(space * i, context.canvas.height); 
-            context.lineTo(space * i, context.canvas.height*(1 - value/255)); 
-            context.stroke();
-        });         
+            const x = this.calculateX(i, dataParm.length, context);
+            //TODO: show values over 0 dB?
+            // value is in dB from Web Audio API
+            const y = canvas.height*(1-value/255);
+
+            if(x === 0)
+                region.moveTo(0, canvas.height);
+            else 
+                region.lineTo(x, ((canvas.height - canvasTopMargin)/canvas.height) * y + canvasTopMargin);
+        });  
+        
+        region.closePath();
+        //context.fillStyle = "green";
+        context.fillStyle = "#808081";
+        context.fill(region);
     }
 
     render(){
         return(
             <div>
                 <p>Marvelous frequency graph!</p>
-                <canvas ref={this.canvasRef} width="540"/>
+                <canvas ref={this.canvasRef} width="640" height="250"/>
             </div>
         );        
     }
