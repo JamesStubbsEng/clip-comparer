@@ -1,6 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
 import PlayButton from './PlayButton';
+import ClipToggleButton from './ClipToggleButton';
 import DragDrop from './DragDrop';
 import FrequencyGraph from './FrequencyGraph';
 import React from 'react';
@@ -17,7 +18,9 @@ class App extends React.Component{
       audioElement1: null,
       audioElement2: null,
       analyser1: null,
-      analyser2: null
+      analyser2: null,
+      gain1: null,
+      gain2: null
     };
   }
 
@@ -31,22 +34,29 @@ class App extends React.Component{
     const audioElement2 = document.querySelector(".clip2");
     this.setState({audioElement2:audioElement2})
     
-    // tracks and analysers
+    //track 1
     const track = audioContext.createMediaElementSource(audioElement1);
-    track.connect(audioContext.destination);
 
     const analyser1 = audioContext.createAnalyser();
-    track.connect(analyser1);
     analyser1.fftSize = 2048;
     this.setState({analyser1: analyser1});
 
+    const gainNode1 = audioContext.createGain();
+    this.setState({gain1: gainNode1});
+
+    track.connect(analyser1).connect(gainNode1).connect(audioContext.destination);
+
+    // track 2
     const track2 = audioContext.createMediaElementSource(audioElement2);
-    track2.connect(audioContext.destination);
 
     const analyser2 = audioContext.createAnalyser();
-    track2.connect(analyser2);
     analyser2.fftSize = 2048;
     this.setState({analyser2: analyser2});
+
+    const gainNode2 = audioContext.createGain();
+    this.setState({gain2: gainNode2});
+
+    track2.connect(analyser2).connect(gainNode2).connect(audioContext.destination);
   }
 
   playButtonHandler(){
@@ -54,9 +64,50 @@ class App extends React.Component{
     if (this.state.audioContext.state === 'suspended') {
       this.state.audioContext.resume();
     }
-    this.setState({playing:!this.state.playing});
-    !this.state.playing ? this.state.audioElement1.play() : this.state.audioElement1.pause();
-    !this.state.playing ? this.state.audioElement2.play() : this.state.audioElement2.pause();
+    // this.setState({playing:!this.state.playing});
+    // !this.state.playing ? this.state.audioElement1.play() : this.state.audioElement1.pause();
+    // !this.state.playing ? this.state.audioElement2.play() : this.state.audioElement2.pause();
+
+    this.setState(prevState => {
+      if(!prevState.playing){
+        this.state.audioElement1.play();
+        this.state.audioElement2.play();
+
+        if(this.state.toggle){
+          this.state.gain1.gain.value = 0;
+          this.state.gain2.gain.value = 1;
+        }
+        else{
+          this.state.gain1.gain.value = 1;
+          this.state.gain2.gain.value = 0;
+        }
+      }
+      else{
+        this.state.audioElement1.pause();
+        this.state.audioElement2.pause();
+      }
+
+      return {playing:!this.state.playing};
+    });
+  }
+
+  clipToggleButtonHandler(){
+    // Check if context is in suspended state (autoplay policy)
+    if (this.state.audioContext.state === 'suspended') {
+      this.state.audioContext.resume();
+    }
+    this.setState(prevState => {
+      if(!prevState.toggle){
+        this.state.gain1.gain.value = 0;
+        this.state.gain2.gain.value = 1;
+      }
+      else{
+        this.state.gain1.gain.value = 1;
+        this.state.gain2.gain.value = 0;
+      }
+
+      return {toggle: !prevState.toggle};
+    });
   }
 
   handleDragDrop(file, isFile1){
@@ -91,6 +142,10 @@ class App extends React.Component{
         <PlayButton 
           playButtonHandler = {() => this.playButtonHandler()}
           playing = {this.state.playing} 
+        />
+        <ClipToggleButton
+        clipToggleButtonHandler = {() => this.clipToggleButtonHandler()}
+        toggle = {this.state.toggle}
         />
         <FrequencyGraph 
         analyser1 = {this.state.analyser1}
