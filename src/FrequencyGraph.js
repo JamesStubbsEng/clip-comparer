@@ -3,15 +3,17 @@ import React from 'react';
 class FrequencyGraph extends React.Component{
     constructor(props){
         super(props);
+        this.canvasBackgroundRef = React.createRef();
         this.canvasRef = React.createRef();
+        this.canvasRef2 = React.createRef();
     }
 
-    componentDidMount(){        
+    componentDidMount(){   
+        this.drawBackground();   
         requestAnimationFrame(() => this.loopingFunction());
     }
 
     componentDidUpdate(){
-        console.log(this.props);
     }
 
     loopingFunction(){
@@ -41,18 +43,33 @@ class FrequencyGraph extends React.Component{
     }
 
     draw(){
-        const data = new Uint8Array(this.props.analyser.frequencyBinCount);
-        this.props.analyser.getByteFrequencyData(data);
+        const data = new Uint8Array(this.props.analyser1.frequencyBinCount);
+        this.props.analyser1.getByteFrequencyData(data);
         const canvas = this.canvasRef.current;
+        this.plotFreqGraph(data, canvas, "rgb(128,128,129, 1.0)");
 
+        const data2 = new Uint8Array(this.props.analyser2.frequencyBinCount);
+        this.props.analyser2.getByteFrequencyData(data2);
+        const canvas2 = this.canvasRef2.current;
+
+        this.plotFreqGraph(data2, canvas2, "rgb(44,44,45, 0.7)");
+    }
+
+    drawBackground(){
+        const canvas = this.canvasBackgroundRef.current;
+        const context = canvas.getContext('2d');
+        context.fillStyle = "#0f0f0f";    
+        context.fillRect(0, 0, canvas.width, canvas.height) 
+    }
+
+    plotFreqGraph(data, canvas, color){
         if(canvas == null)
-            return;
-    
+        return;
+
         const context = canvas.getContext('2d');
         const dataParm = [...data];      
-        
-        context.fillStyle = "#050c03";    
-        context.fillRect(0, 0, canvas.width, canvas.height)      
+              
+        context.clearRect(0, 0, canvas.width, canvas.height);
         
         const canvasTopMargin = 20;
 
@@ -70,16 +87,20 @@ class FrequencyGraph extends React.Component{
         });  
         
         region.closePath();
-        //context.fillStyle = "green";
-        context.fillStyle = "#808081";
+
+        context.fillStyle = color;
         context.fill(region);
     }
 
     render(){
         return(
-            <div>
-                <p>Marvelous frequency graph!</p>
-                <canvas ref={this.canvasRef} width="640" height="250"/>
+            <div className = "freqBackground">
+                <canvas ref={this.canvasBackgroundRef} width="640" height="250"
+                />
+                <canvas ref={this.canvasRef} width="640" height="250"
+                />
+                <canvas ref={this.canvasRef2} width="640" height="250"
+                />
             </div>
         );        
     }
