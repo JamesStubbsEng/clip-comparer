@@ -64,9 +64,6 @@ class App extends React.Component{
     if (this.state.audioContext.state === 'suspended') {
       this.state.audioContext.resume();
     }
-    // this.setState({playing:!this.state.playing});
-    // !this.state.playing ? this.state.audioElement1.play() : this.state.audioElement1.pause();
-    // !this.state.playing ? this.state.audioElement2.play() : this.state.audioElement2.pause();
 
     this.setState(prevState => {
       if(!prevState.playing){
@@ -113,13 +110,13 @@ class App extends React.Component{
   handleDragDrop(file, isFile1){
     if(isFile1){
       this.setState({file1: file});
-      const audioElement = document.querySelector(".clip1");
+      const audioElement = this.state.audioElement1;
       const sourceAux = URL.createObjectURL(file);
       audioElement.src = sourceAux;
     }
     else{
       this.setState({file2: file});
-      const audioElement = document.querySelector(".clip2");
+      const audioElement = this.state.audioElement2;
       const sourceAux = URL.createObjectURL(file);
       audioElement.src = sourceAux;
     } 
