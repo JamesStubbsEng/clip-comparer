@@ -25,24 +25,19 @@ class App extends React.Component{
   }
 
   componentDidMount(){
-    const AudioContext = window.AudioContext ||      window.webkitAudioContext;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
     const audioContext = new AudioContext();
 
-    this.setState({audioContext: audioContext})
     const audioElement1 = document.querySelector(".clip1");
-    this.setState({audioElement1:audioElement1});
     const audioElement2 = document.querySelector(".clip2");
-    this.setState({audioElement2:audioElement2})
     
     //track 1
     const track = audioContext.createMediaElementSource(audioElement1);
 
     const analyser1 = audioContext.createAnalyser();
     analyser1.fftSize = 2048;
-    this.setState({analyser1: analyser1});
 
     const gainNode1 = audioContext.createGain();
-    this.setState({gain1: gainNode1});
 
     track.connect(analyser1).connect(gainNode1).connect(audioContext.destination);
 
@@ -51,12 +46,21 @@ class App extends React.Component{
 
     const analyser2 = audioContext.createAnalyser();
     analyser2.fftSize = 2048;
-    this.setState({analyser2: analyser2});
 
     const gainNode2 = audioContext.createGain();
-    this.setState({gain2: gainNode2});
 
     track2.connect(analyser2).connect(gainNode2).connect(audioContext.destination);
+
+    // set state which updates DOM
+    this.setState({
+      audioContext: audioContext,
+      audioElement1:audioElement1,
+      audioElement2:audioElement2,
+      analyser1: analyser1,
+      gain1: gainNode1,
+      analyser2: analyser2,
+      gain2: gainNode2
+    })
   }
 
   playButtonHandler(){
@@ -147,6 +151,7 @@ class App extends React.Component{
         <FrequencyGraph 
         analyser1 = {this.state.analyser1}
         analyser2 = {this.state.analyser2}
+        audioContext = {this.state.audioContext}
         />
       </div>        
     );

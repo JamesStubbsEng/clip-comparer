@@ -1,5 +1,8 @@
 import React from 'react';
 
+const freqArray = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
+const freqStringArray = ["20", "50", "100", "200", "500", "1k", "2k", "5k", "10k", "20k"];
+
 class FrequencyGraph extends React.Component{
     constructor(props){
         super(props);
@@ -8,12 +11,12 @@ class FrequencyGraph extends React.Component{
         this.canvasRef2 = React.createRef();
     }
 
-    componentDidMount(){   
-        this.drawBackground();   
+    componentDidMount(){    
         requestAnimationFrame(() => this.loopingFunction());
     }
 
     componentDidUpdate(){
+        this.drawBackground();  
     }
 
     loopingFunction(){
@@ -37,9 +40,17 @@ class FrequencyGraph extends React.Component{
         // 1) x_max = (10^(1/a) - 1)) 
         // 2) x_max = ((f_sample/2)/f) * (10^(0.5/a) - 1)
 
+        // results
+        // a = 0.499
+        // x_max - x_min = 99.5
+
         const x = (i/length)*(99.5);
         const logOfX = 0.499 * Math.log10(x + 1);
         return logOfX * context.canvas.width;
+    }
+
+    calculateXFromFrequency(freq, canvasContext){
+        return this.calculateX(freq, this.props.audioContext.sampleRate/2, canvasContext);
     }
 
     draw(){
@@ -59,7 +70,23 @@ class FrequencyGraph extends React.Component{
         const canvas = this.canvasBackgroundRef.current;
         const context = canvas.getContext('2d');
         context.fillStyle = "#0f0f0f";    
-        context.fillRect(0, 0, canvas.width, canvas.height) 
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.strokeStyle = "grey";
+        context.font = "10px Arial";
+        
+        //frequency markings
+        freqArray.forEach((freq, index) => {
+            //line
+            context.beginPath();
+            const x = this.calculateXFromFrequency(freq, context);
+            context.moveTo(x, canvas.height);
+            context.lineTo(x, 0);
+            context.stroke();
+
+            //text
+            context.fillStyle = "white";
+            context.fillText(freqStringArray[index], x + 1, 15);
+        });
     }
 
     plotFreqGraph(data, canvas, color){
@@ -95,12 +122,9 @@ class FrequencyGraph extends React.Component{
     render(){
         return(
             <div className = "freqBackground">
-                <canvas ref={this.canvasBackgroundRef} width="640" height="250"
-                />
-                <canvas ref={this.canvasRef} width="640" height="250"
-                />
-                <canvas ref={this.canvasRef2} width="640" height="250"
-                />
+                <canvas ref={this.canvasBackgroundRef} width="640" height="250"/>
+                <canvas ref={this.canvasRef} width="640" height="250"/>
+                <canvas ref={this.canvasRef2} width="640" height="250"/>
             </div>
         );        
     }
