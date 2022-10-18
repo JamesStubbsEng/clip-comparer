@@ -1,7 +1,7 @@
 import React from 'react';
 
-const freqArray = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
-const freqStringArray = ["20", "50", "100", "200", "500", "1k", "2k", "5k", "10k", "20k"];
+const freqArray = [20, 60, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+const freqStringArray = ["20", "60", "125", "250", "500", "1k", "2k", "4k", "8k", "16k"];
 
 class FrequencyGraph extends React.Component{
     constructor(props){
@@ -26,14 +26,14 @@ class FrequencyGraph extends React.Component{
 
     calculateX(i, length, context){
 
-        // Center middle canvas x to ~2 kHz with log scale
+        // Center middle canvas x to a given frequency 'f' with log scale
         // using forumula logOfX = a*log10(x + 1)
         // where x = i_norm * (x_max - x_min)/(i_norm_max - i_norm_min)
 
         // intermediate equations:
-        // a = 0.5 / (log10(x_2k + 1)),
-        // x_2k = (f/(f_sample/2))*(x_max - x_min)
-        // x_min = 0 and i_norm_min = 0, f = 2k
+        // a = 0.5 / (log10(x_f + 1)),
+        // x_f = (f/(f_sample/2))*(x_max - x_min)
+        // x_min = 0 and i_norm_min = 0, f = 750, f_sample = 44000
         // x_max = 10^(1/a) - 1
 
         // solve these 2 equations:
@@ -41,11 +41,11 @@ class FrequencyGraph extends React.Component{
         // 2) x_max = ((f_sample/2)/f) * (10^(0.5/a) - 1)
 
         // results
-        // a = 0.499
-        // x_max - x_min = 99.5
+        // a = 0.367
+        // x_max - x_min = 529.6
 
-        const x = (i/length)*(99.5);
-        const logOfX = 0.499 * Math.log10(x + 1);
+        const x = (i/length)*(529.6);
+        const logOfX = 0.367 * Math.log10(x + 1);
         return logOfX * context.canvas.width;
     }
 
