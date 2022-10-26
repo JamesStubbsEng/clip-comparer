@@ -12,6 +12,12 @@ class App extends React.Component{
     this.state = {
       file1: null,
       file2: null,
+      source1: null,
+      source2: null,
+      initTime1: 0,
+      initTime2: 0,
+      audioBuffer1: null,
+      audioBuffer2: null,
       playing: false,
       toggle: false,
       audioContext: null,
@@ -32,24 +38,21 @@ class App extends React.Component{
     const audioElement2 = document.querySelector(".clip2");
     
     //track 1
-    const track = audioContext.createMediaElementSource(audioElement1);
-
     const analyser1 = audioContext.createAnalyser();
     analyser1.fftSize = 2048;
 
     const gainNode1 = audioContext.createGain();
 
-    track.connect(analyser1).connect(gainNode1).connect(audioContext.destination);
+    analyser1.connect(gainNode1).connect(audioContext.destination);
 
     // track 2
-    const track2 = audioContext.createMediaElementSource(audioElement2);
 
     const analyser2 = audioContext.createAnalyser();
     analyser2.fftSize = 2048;
 
     const gainNode2 = audioContext.createGain();
 
-    track2.connect(analyser2).connect(gainNode2).connect(audioContext.destination);
+    analyser2.connect(gainNode2).connect(audioContext.destination);
 
     // set state which updates DOM
     this.setState({
@@ -64,15 +67,22 @@ class App extends React.Component{
   }
 
   playButtonHandler(){
-    // Check if context is in suspended state (autoplay policy)
-    if (this.state.audioContext.state === 'suspended') {
-      this.state.audioContext.resume();
-    }
-
     this.setState(prevState => {
+      const audioContext = this.state.audioContext;
+
       if(!prevState.playing){
-        this.state.audioElement1.play();
-        this.state.audioElement2.play();
+        //recreate AudioBufferSourceNode      
+        const source1 = audioContext.createBufferSource();
+        source1.buffer = this.state.audioBuffer1;
+        source1.connect(this.state.analyser1);
+        source1.loop = true;
+        source1.start();
+
+        const source2 = audioContext.createBufferSource();
+        source2.buffer = this.state.audioBuffer2;
+        source2.connect(this.state.analyser2);
+        source2.loop = true;
+        source2.start();
 
         if(this.state.toggle){
           this.state.gain1.gain.value = 0;
@@ -82,10 +92,20 @@ class App extends React.Component{
           this.state.gain1.gain.value = 1;
           this.state.gain2.gain.value = 0;
         }
+
+        return {
+          playing:!this.state.playing, 
+          source1: source1, 
+          source2: source2,
+          initTime1: audioContext.currentTime,
+          initTime2: audioContext.currentTime
+        };
       }
       else{
-        this.state.audioElement1.pause();
-        this.state.audioElement2.pause();
+        console.log("Current time - initTime1: " + String(audioContext.currentTime - prevState.initTime1));
+        //call stop() on the AudioBufferSourceNode
+        this.state.source1.stop();
+        this.state.source2.stop();
       }
 
       return {playing:!this.state.playing};
@@ -93,10 +113,6 @@ class App extends React.Component{
   }
 
   clipToggleButtonHandler(){
-    // Check if context is in suspended state (autoplay policy)
-    if (this.state.audioContext.state === 'suspended') {
-      this.state.audioContext.resume();
-    }
     this.setState(prevState => {
       if(!prevState.toggle){
         this.state.gain1.gain.value = 0;
@@ -114,17 +130,35 @@ class App extends React.Component{
   handleDragDrop(file, isFile1){
     if(isFile1){
       this.setState({file1: file});
-      const audioElement = this.state.audioElement1;
-      const sourceAux = URL.createObjectURL(file);
-      audioElement.src = sourceAux;
+      this.readFileIntoAudioBuffer(file, isFile1);
     }
     else{
       this.setState({file2: file});
-      const audioElement = this.state.audioElement2;
-      const sourceAux = URL.createObjectURL(file);
-      audioElement.src = sourceAux;
+      this.readFileIntoAudioBuffer(file, isFile1);
     } 
   };
+
+  readFileIntoAudioBuffer(file, isFile1){
+    const audioContext = this.state.audioContext;
+    const source = audioContext.createBufferSource();
+
+    const reader = new FileReader();
+    reader.onload = (e) => { 
+      audioContext.decodeAudioData(
+        e.target.result,
+        (buffer) => {
+          source.buffer = buffer;
+          if(isFile1)
+            this.setState({audioBuffer1: buffer});
+          else
+            this.setState({audioBuffer2: buffer});
+        },
+  
+        (err) => console.error(`Error with decoding audio data: ${err.err}`)
+      );
+    };
+    reader.readAsArrayBuffer(file);
+  }
   
   render() {
     return (
