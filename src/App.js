@@ -4,6 +4,7 @@ import PlayButton from './PlayButton';
 import ClipToggleButton from './ClipToggleButton';
 import DragDrop from './DragDrop';
 import FrequencyGraph from './FrequencyGraph';
+import Clip from './Clip';
 import React from 'react';
 
 class App extends React.Component{
@@ -98,7 +99,7 @@ class App extends React.Component{
           source1: source1, 
           source2: source2,
           initTime1: audioContext.currentTime,
-          initTime2: audioContext.currentTime
+          initTime2: audioContext.currentTime,
         };
       }
       else{
@@ -181,6 +182,14 @@ class App extends React.Component{
         <ClipToggleButton
         clipToggleButtonHandler = {() => this.clipToggleButtonHandler()}
         toggle = {this.state.toggle}
+        />
+        <Clip 
+        audioBuffer = {this.state.audioBuffer1}
+        colour = {"rgb(128,128,129, 1.0)"}
+        />
+        <Clip 
+        audioBuffer = {this.state.audioBuffer2}
+        colour = {"rgb(44,44,45, 0.7)"}
         />
         <FrequencyGraph 
         analyser1 = {this.state.analyser1}
